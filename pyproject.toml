@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nyz-dynamic-design-builder"
-version = "0.1.0"
+version = "0.1.1"
 description = "Dynamic Excel export builder for Django ORM querysets"
 authors = [ { name = "Niyazi Özaydın", email = "niyazi.ozydn@gmail.com" } ]
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.6"
 dependencies = [
-  "pandas>=1.0",
-  "django>=2.2"
+  "pandas>=2.2.3",
+  "django>=5.1.4"
 ]

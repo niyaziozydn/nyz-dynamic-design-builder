@@ -1,21 +1,23 @@
 from setuptools import setup, find_packages
 
+with open("README.md", "r", encoding="utf-8") as f:
+    long_description = f.read()
+
 setup(
     name="nyz-dynamic-design-builder",
-    version="0.1.0",
+    version="0.1.1",
     description="Dynamic Excel export builder for Django ORM querysets",
-    long_description=open("README.md").read(),
+    long_description=long_description,
     long_description_content_type="text/markdown",
-    author="Your Name",
-    author_email="your-email@example.com",
-    url="https://github.com/yourusername/nyz-dynamic-design-builder",
+    author="Niyazi Özaydın",
+    author_email="niyazi.ozydn@gmail.com",
+    url="https://github.com/niyaziozydn/nyz-dynamic-design-builder",
     license="MIT",
     packages=find_packages(exclude=["tests*", "docs*"]),
     install_requires=[
-        "pandas>=1.0",
-        "django>=2.2"
+        "django>=5.1.4"
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.10",
     classifiers=[
         "Programming Language :: Python :: 3",
         "Framework :: Django",
