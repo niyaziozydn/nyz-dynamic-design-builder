@@ -1,6 +1,8 @@
 # 🧩 nyz-dynamic-design-builder
 
-`nyz-dynamic-design-builder` is a lightweight Django-compatible Python utility for exporting model data (including ForeignKey and ManyToMany fields) to Excel — no `pandas` required.
+**nyz-dynamic-design-builder** is a lightweight Django-compatible Python utility for exporting model data — including `ForeignKey` and `ManyToMany` fields — into a structured `pandas.DataFrame` format. You can write it to Excel if needed.
+
+No serializers or admin customization required. Just your model and your queryset.
 
 ---
 
@@ -14,23 +16,21 @@ pip install nyz-dynamic-design-builder
 
 ## 📝 Sample Model: Blog
 
-Assume you have a `Blog` model like this:
-
 ```python
 from django.db import models
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+class Tag(models.Model):
+    name = models.CharField(max_length=100)
+
 class Blog(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    tags = models.ManyToManyField("Tag", blank=True)
+    tags = models.ManyToManyField(Tag, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-class Tag(models.Model):
-    name = models.CharField(max_length=100)
 ```
 
 ---
@@ -38,69 +38,86 @@ class Tag(models.Model):
 ## ⚙️ Usage
 
 ```python
-from nyz_dynamic_design_builder.exporter import export_model_to_excel
+from nyz_dynamic_design_builder.exporter import export_data
 
-export_model_to_excel(
-    file_path="blog_export.xlsx",
-    model=Blog,
+queryset = Blog.objects.all()
+
+df = export_data(
+    query=queryset,
     field_list=["title", "content", "author", "tags", "created_at"],
     search_fk_list=["text", "name", "username", "first_name", "last_name"],
-    special_fk_values={"author": ["username", "first_name", "last_name", "is_active"]},
+    special_fk_values={
+        "author": ["username", "first_name", "last_name", "is_active"]
+    },
+    special_m2m_fields={
+        "tags": ["name"]
+    },
     ignore_m2m_fields=["id", "created_at", "updated_at"]
 )
+
+df.to_excel("blog_export.xlsx", index=False)
 ```
 
 ---
 
 ## 🔍 Parameters Explained
 
-| Parameter            | Description                                                                 |
-|----------------------|-----------------------------------------------------------------------------|
-| `file_path`          | Path to save the exported Excel file.                                       |
-| `model`              | Django model class to export from.                                          |
-| `field_list`         | Fields to export from the model (includes FK and M2M fields as needed).     |
-| `search_fk_list`     | For FK fields in `field_list`, this defines the inner field search priority (e.g. `text`, `name`). |
-| `special_fk_values`  | If a field in `field_list` is also in `special_fk_values`, it will extract only the listed fields. |
-| `ignore_m2m_fields`  | If a field in `field_list` is M2M, this list is used to ignore specific subfields. |
+| Parameter            | Description |
+|----------------------|-------------|
+| `query`              | Django queryset (e.g. `Blog.objects.all()`) |
+| `field_list`         | Fields to export from the model (including FK/M2M) |
+| `search_fk_list`     | List of attributes to try in FK fields (fallback order) |
+| `special_fk_values`  | Dict: FK field -> list of subfields to extract |
+| `special_m2m_fields` | Dict: M2M field -> list of subfields to extract |
+| `ignore_m2m_fields`  | M2M fields or subfields to ignore |
 
 ---
 
-## 🧠 Logic
+## 🧠 How It Works
 
-- If a ForeignKey field is included in `field_list`:
-  - First it checks if the field is listed in `special_fk_values`. If so, it extracts only those subfields.
-  - Otherwise, it loops through `search_fk_list` to find the best matching subfield.
-
-- If a ManyToMany field is in `field_list`:
-  - All of its fields are extracted except those listed in `ignore_m2m_fields`.
+- For `ForeignKey` fields:
+  - If listed in `special_fk_values`, it exports the specified subfields.
+  - Else, it searches through `search_fk_list` and uses the first match.
+  
+- For `ManyToMany` fields:
+  - If listed in `special_m2m_fields`, only those subfields are exported.
+  - Otherwise, all subfields are exported except those in `ignore_m2m_fields`.
 
 ---
 
 ## 📤 Output Example
 
-Excel file might include columns like:
+Columns in the Excel might look like:
 
-- Title  
-- Content  
-- Author - Username  
-- Author - First Name  
-- Author - Last Name  
-- Author - Is Active  
-- Tags 1 - Name  
-- Tags 2 - Name  
-- Created At
+- `Title`
+- `Content`
+- `Author - Username`
+- `Author - First Name`
+- `Author - Last Name`
+- `Author - Is Active`
+- `Tags 1 - Name`
+- `Tags 2 - Name`
+- `Created At`
 
 ---
 
 ## ✅ Perfect For
 
-- Admin Excel exports  
-- Lightweight dynamic field selection  
-- Human-readable relationship data without pandas
+- Admin-level or reporting exports
+- Human-readable outputs for nested fields
+- Avoiding verbose serializers or views for temporary data output
+- Excel generation from any model dynamically
 
 ---
 
 ## 🔒 Notes
 
-- No need to modify your model.
-- Works with any Django model, respects relationships.
+- You control exactly which fields and subfields are included.
+- `pandas` and `openpyxl` are required.
+- You can use `.to_excel()`, `.to_csv()` or any other `pandas` method after export.
+
+---
+
+## 📜 License
+
+MIT
