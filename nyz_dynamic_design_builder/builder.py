@@ -80,24 +80,30 @@ def get_m2m_fields(field_name, m2m_values, search_fk_list, ignore_m2m_fields=Non
     return m2m_rows
 
 
-def get_special_fk_fields(obj, field_name, sub_fields, search_fk_list=None,previous_data_value=None,current_data_value=None):
+def get_special_fk_fields(obj, field_name, sub_fields, search_fk_list=None, previous_data_value=None,
+                          current_data_value=None):
     rows = {}
     fk_obj = getattr(obj, field_name, None)
     if not fk_obj:
         return ""
 
+    try:
+        parent_verbose_name = obj._meta.get_field(field_name).verbose_name
+    except Exception:
+        parent_verbose_name = field_name
+
     for sub_field in sub_fields:
         try:
             value = getattr(fk_obj, sub_field, "")
             if isinstance(value, ForeignKey):
-                value = search_fk_value(fk_obj, sub_field, search_fk_list,previous_data_value,current_data_value)
+                value = search_fk_value(fk_obj, sub_field, search_fk_list, previous_data_value, current_data_value)
             if callable(value):
                 value = value()
             verbose_name = fk_obj._meta.get_field(sub_field).verbose_name
         except Exception:
             verbose_name = sub_field
             value = getattr(fk_obj, sub_field, "")
-        key = f"{verbose_name}"
+        key = f"{parent_verbose_name} - {verbose_name}"
         rows[key] = value
     return rows
 

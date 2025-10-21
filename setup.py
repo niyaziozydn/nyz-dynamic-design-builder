@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="nyz-dynamic-design-builder",
-    version="3.0.0",
+    version="3.0.1",
     description="Dynamic Excel export builder for Django ORM querysets",
     long_description=long_description,
     long_description_content_type="text/markdown",
